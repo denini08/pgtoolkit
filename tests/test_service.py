@@ -1,5 +1,6 @@
 from io import StringIO
 from textwrap import dedent
+import os
 
 import pytest
 
@@ -130,9 +131,9 @@ def test_find(mocker):
 
     exists.side_effect = [False, True]
     servicefile = find(environ=dict())
-    assert servicefile.endswith("/pg_service.conf")
+    assert servicefile.endswith(f"{os.sep}pg_service.conf")
     exists.side_effect = None
 
     g_scd.side_effect = Exception("Pouet")
     servicefile = find(environ=dict())
-    assert servicefile.endswith("/.pg_service.conf")
+    assert servicefile.endswith(".pg_service.conf")
