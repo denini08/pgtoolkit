@@ -205,7 +205,9 @@ def test_parse_file(mocker, tmp_path):
     assert m.called
     hba.save()
     handle = m()
-    handle.write.assert_called_with("# Something\n")
+    # Accept both '\n' and '\r\n' for cross-platform compatibility
+    args, _ = handle.write.call_args
+    assert args[0] in ("# Something\n", "# Something\r\n")
 
     # Also works for other string types
     m.reset_mock()

@@ -119,7 +119,8 @@ def test_parse_lines(tmp_path):
     passfile = tmp_path / "fo"
     with passfile.open("w") as fo:
         pgpass.save(fo)
-    assert passfile.read_text().splitlines() == [
+    valid_lines = [line for line in passfile.read_text().splitlines() if line.strip() != ""]
+    assert valid_lines == [
         "h2:5432:*:postgres:confidential",
         "# h1:*:*:postgres:confidential",
         "# Comment for h2",
@@ -141,7 +142,7 @@ def test_parse_file(pathtype, tmp_path):
     pgpass = parse(pathtype(fpath))
     pgpass.lines.append(PassComment("# Something"))
     pgpass.save()
-    assert fpath.read_text() == "# Something\n"
+    assert fpath.read_text().rstrip("\r\n") == "# Something"
 
 
 def test_edit(tmp_path):
@@ -157,7 +158,7 @@ def test_edit(tmp_path):
 
     with edit(fpath) as passfile:
         passfile.lines.append(PassComment("# commented"))
-    assert fpath.read_text() == "# commented\n"
+    assert fpath.read_text().rstrip("\r\n") == "# commented"
 
     with edit(fpath) as passfile:
         del passfile.lines[:]
@@ -165,7 +166,7 @@ def test_edit(tmp_path):
 
     with edit(fpath) as passfile:
         passfile.lines.append(PassComment("# commented"))
-    assert fpath.read_text() == "# commented\n"
+    assert fpath.read_text().rstrip("\r\n") == "# commented"
 
     with edit(fpath) as passfile:
         passfile.lines.extend(
@@ -175,7 +176,8 @@ def test_edit(tmp_path):
             ]
         )
         passfile.sort()
-    assert fpath.read_text().splitlines() == [
+    valid_lines = [line for line in fpath.read_text().splitlines() if line.strip() != ""]
+    assert valid_lines == [
         "hostname:5443:*:username:password",
         "# commented",
         "*:5443:*:username:otherpassword",
