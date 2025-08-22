@@ -1,4 +1,5 @@
 import pathlib
+import re
 from datetime import timedelta
 from io import StringIO
 from textwrap import dedent
@@ -288,6 +289,12 @@ def test_parser_includes_loop(tmp_path):
         parse(str(pgconf))
 
 
+def normalize_pattern(msg: str) -> str:
+    # helper to normalize error messages across different platforms
+    escaped = re.escape(msg)
+    escaped = escaped.replace(r"\\", r"[\\/]+")
+    return escaped
+
 def test_parser_includes_notfound(tmp_path):
     from pgtoolkit.conf import parse
 
@@ -296,7 +303,8 @@ def test_parser_includes_notfound(tmp_path):
         f.write("include = 'missing.conf'\n")
     missing_conf = tmp_path / "missing.conf"
     msg = f"file '{missing_conf}', included from '{pgconf}', not found"
-    with pytest.raises(FileNotFoundError, match=msg):
+    pattern = normalize_pattern(msg)
+    with pytest.raises(FileNotFoundError, match=pattern):
         parse(str(pgconf))
 
     pgconf = tmp_path / "postgres.conf"
@@ -304,7 +312,8 @@ def test_parser_includes_notfound(tmp_path):
         f.write("include_dir = 'conf.d'\n")
     missing_conf = tmp_path / "conf.d"
     msg = f"directory '{missing_conf}', included from '{pgconf}', not found"
-    with pytest.raises(FileNotFoundError, match=msg):
+    pattern = normalize_pattern(msg)
+    with pytest.raises(FileNotFoundError, match=pattern):
         parse(str(pgconf))
 
 
